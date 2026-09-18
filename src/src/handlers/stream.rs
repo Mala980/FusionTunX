@@ -22,7 +22,7 @@ pub async fn stream_mihomo_logs(
 async fn handle_mihomo_logs_socket(mut socket: WebSocket, state: Arc<AppState>) {
     let status = state.mihomo_service.get_status().await;
     if status != "running" {
-        let _ = socket.send(Message::Text("ERROR: mihomo is not running".to_string())).await;
+        let _ = socket.send(Message::Text("ERROR: mihomo is not running".into())).await;
         return;
     }
 
@@ -82,19 +82,19 @@ pub async fn clear_app_logs(State(state): State<Arc<AppState>>) -> impl IntoResp
 
 async fn stream_file(mut socket: WebSocket, log_file: String) {
     if log_file.is_empty() {
-        let _ = socket.send(Message::Text("ERROR: log file not configured".to_string())).await;
+        let _ = socket.send(Message::Text("ERROR: log file not configured".into())).await;
         return;
     }
 
     if !Path::new(&log_file).exists() {
-        let _ = socket.send(Message::Text(format!("ERROR: log file does not exist: {}", log_file))).await;
+        let _ = socket.send(Message::Text(format!("ERROR: log file does not exist: {}", log_file).into())).await;
         return;
     }
 
     let mut file = match File::open(&log_file) {
         Ok(f) => f,
         Err(e) => {
-            let _ = socket.send(Message::Text(format!("ERROR: failed to open log file: {}", e))).await;
+            let _ = socket.send(Message::Text(format!("ERROR: failed to open log file: {}", e).into())).await;
             return;
         }
     };
@@ -116,7 +116,7 @@ async fn stream_file(mut socket: WebSocket, log_file: String) {
                     for line in &lines[start_idx..] {
                         let trimmed = line.trim();
                         if !trimmed.is_empty() {
-                            if socket.send(Message::Text(trimmed.to_string())).await.is_err() {
+                            if socket.send(Message::Text(trimmed.to_string().into())).await.is_err() {
                                 return;
                             }
                         }
@@ -155,7 +155,7 @@ async fn stream_file(mut socket: WebSocket, log_file: String) {
                     for line in content.split('\n') {
                         let trimmed = line.trim();
                         if !trimmed.is_empty() {
-                            if socket.send(Message::Text(trimmed.to_string())).await.is_err() {
+                            if socket.send(Message::Text(trimmed.to_string().into())).await.is_err() {
                                 return;
                             }
                         }
@@ -191,7 +191,7 @@ pub async fn stream_connections(
 async fn stream_mihomo_stream_api(mut socket: WebSocket, state: Arc<AppState>, endpoint: &'static str) {
     let status = state.mihomo_service.get_status().await;
     if status != "running" {
-        let _ = socket.send(Message::Text("ERROR: mihomo is not running".to_string())).await;
+        let _ = socket.send(Message::Text("ERROR: mihomo is not running".into())).await;
         return;
     }
 
@@ -207,7 +207,7 @@ async fn stream_mihomo_stream_api(mut socket: WebSocket, state: Arc<AppState>, e
     let resp = match req_builder.send().await {
         Ok(r) => r,
         Err(e) => {
-            let _ = socket.send(Message::Text(format!("ERROR: failed to connect to Mihomo API: {}", e))).await;
+            let _ = socket.send(Message::Text(format!("ERROR: failed to connect to Mihomo API: {}", e).into())).await;
             return;
         }
     };
@@ -220,7 +220,7 @@ async fn stream_mihomo_stream_api(mut socket: WebSocket, state: Arc<AppState>, e
                 for line in text.lines() {
                     let trimmed = line.trim();
                     if !trimmed.is_empty() {
-                        if socket.send(Message::Text(trimmed.to_string())).await.is_err() {
+                        if socket.send(Message::Text(trimmed.to_string().into())).await.is_err() {
                             return;
                         }
                     }
@@ -234,7 +234,7 @@ async fn stream_mihomo_stream_api(mut socket: WebSocket, state: Arc<AppState>, e
 async fn stream_connections_poll(mut socket: WebSocket, state: Arc<AppState>) {
     let status = state.mihomo_service.get_status().await;
     if status != "running" {
-        let _ = socket.send(Message::Text("ERROR: mihomo is not running".to_string())).await;
+        let _ = socket.send(Message::Text("ERROR: mihomo is not running".into())).await;
         return;
     }
 
@@ -258,7 +258,7 @@ async fn stream_connections_poll(mut socket: WebSocket, state: Arc<AppState>) {
         if let Ok(resp) = req_builder.send().await {
             if let Ok(bytes) = resp.bytes().await {
                 let s = String::from_utf8_lossy(&bytes).to_string();
-                if socket.send(Message::Text(s)).await.is_err() {
+                if socket.send(Message::Text(s.into())).await.is_err() {
                     return;
                 }
             }

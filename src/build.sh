@@ -31,15 +31,18 @@ build_target() {
     local output="$2"
     echo " -> Building for $target..."
     if cargo build --release --target "$target"; then
-        cp "target/$target/release/fusiontunx" "$output"
-        echo "    Created $output"
-    elif cargo build --release --manifest-path Cargo.toml --target "$target"; then
-        cp "target/$target/release/fusiontunx" "$output"
-        echo "    Created $output"
-    else
-        echo "    Warning: Target $target failed to build"
-        return 1
+        if [ -f "target/$target/release/fusiontunx" ]; then
+            cp "target/$target/release/fusiontunx" "$output"
+            echo "    Created $output"
+            return 0
+        elif [ -f "../target/$target/release/fusiontunx" ]; then
+            cp "../target/$target/release/fusiontunx" "$output"
+            echo "    Created $output"
+            return 0
+        fi
     fi
+    echo "    Warning: Target $target failed to build"
+    return 1
 }
 
 # 1. Build amd64
@@ -62,14 +65,14 @@ echo " -> Building for host default..."
 cargo build --release
 if [ -f "target/release/fusiontunx" ]; then
     cp "target/release/fusiontunx" "bin/fusiontunx"
-    # Also copy to specific arch name if not already created
-    if [ "$HOST_ARCH" == "x86_64" ] && [ ! -f "bin/fusiontunx-linux-amd64" ]; then
-        cp "target/release/fusiontunx" "bin/fusiontunx-linux-amd64"
-    elif { [ "$HOST_ARCH" == "aarch64" ] || [ "$HOST_ARCH" == "arm64" ]; } && [ ! -f "bin/fusiontunx-linux-arm64" ]; then
-        cp "target/release/fusiontunx" "bin/fusiontunx-linux-arm64"
-    fi
 elif [ -f "../target/release/fusiontunx" ]; then
     cp "../target/release/fusiontunx" "bin/fusiontunx"
+fi
+
+if [ "$HOST_ARCH" == "x86_64" ] && [ ! -f "bin/fusiontunx-linux-amd64" ]; then
+    cp "bin/fusiontunx" "bin/fusiontunx-linux-amd64"
+elif { [ "$HOST_ARCH" == "aarch64" ] || [ "$HOST_ARCH" == "arm64" ]; } && [ ! -f "bin/fusiontunx-linux-arm64" ]; then
+    cp "bin/fusiontunx" "bin/fusiontunx-linux-arm64"
 fi
 
 echo "[3/3] Build complete!"

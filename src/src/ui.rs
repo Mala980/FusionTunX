@@ -20,17 +20,17 @@ pub async fn static_handler(uri: Uri) -> impl IntoResponse {
         return Response::builder()
             .status(StatusCode::OK)
             .header(CONTENT_TYPE, HeaderValue::from_str(mime.as_ref()).unwrap())
-            .body(Body::from(content.data))
+            .body(Body::from(content.data.into_owned()))
             .unwrap();
     }
 
-    // SPA fallback: if not an /api/ or /docs/ path, return index.html
+    // SPA fallback: if not an /api/ or /docs path, return index.html
     if !uri.path().starts_with("/api/") && !uri.path().starts_with("/docs") {
         if let Some(content) = DashboardAssets::get("index.html") {
             return Response::builder()
                 .status(StatusCode::OK)
                 .header(CONTENT_TYPE, HeaderValue::from_static("text/html; charset=utf-8"))
-                .body(Body::from(content.data))
+                .body(Body::from(content.data.into_owned()))
                 .unwrap();
         }
     }

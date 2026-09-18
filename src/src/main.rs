@@ -1,7 +1,8 @@
+#[macro_use]
+mod logger;
 mod config;
 mod converter;
 mod handlers;
-mod logger;
 mod router;
 mod service;
 mod ui;

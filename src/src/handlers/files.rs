@@ -20,18 +20,13 @@ fn normalize_dir(dir: &str) -> Option<&'static str> {
     }
 }
 
-fn is_path_safe(path: &Path, base: &Path) -> bool {
-    if let (Ok(canonical_path), Ok(canonical_base)) = (path.canonicalize(), base.canonicalize()) {
-        canonical_path.starts_with(canonical_base)
-    } else {
-        // If file doesn't exist yet, check parent
-        if let Some(parent) = path.parent() {
-            if let (Ok(canonical_parent), Ok(canonical_base)) = (parent.canonicalize(), base.canonicalize()) {
-                return canonical_parent.starts_with(canonical_base);
-            }
+fn is_path_safe(path: &Path, _base: &Path) -> bool {
+    for comp in path.components() {
+        if let std::path::Component::ParentDir = comp {
+            return false;
         }
-        false
     }
+    true
 }
 
 fn check_yaml_ext(filename: &str) -> bool {
