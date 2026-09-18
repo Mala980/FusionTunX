@@ -15,12 +15,12 @@ PKG_HASH:=skip
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 
-PKG_BUILD_DEPENDS:=node/host golang/host
+PKG_BUILD_DEPENDS:=node/host rust/host
 
 MIHOMO_VERSION:=v1.19.18
 
 include $(INCLUDE_DIR)/package.mk
-include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
+# Rust package
 
 GO_PKG:=github.com/bobbyunknown/FusionTunX
 
@@ -57,20 +57,10 @@ define Build/Compile
 	cp -r $(PKG_BUILD_DIR)/src/dash/dist $(PKG_BUILD_DIR)/src/internal/ui/dist
 	chmod -R 755 $(PKG_BUILD_DIR)/src/internal/ui/dist
 
-	@echo "Installing dependencies and generating Swagger..."
+	@echo "Compiling FusionTunX Rust binary..."
 	cd $(PKG_BUILD_DIR)/src && \
-		go mod tidy && \
-		go install github.com/swaggo/swag/cmd/swag@latest && \
-		$(HOME)/go/bin/swag init -g cmd/server/main.go -o docs
-
-	@echo "Compiling FusionTunX Go binary..."
-	cd $(PKG_BUILD_DIR)/src && \
-		GOOS=linux \
-		GOARCH=$(GO_ARCH) \
-		$(if $(findstring arm,$(GO_ARCH)),GOARM=$(or $(GO_ARM),7)) \
-		$(if $(findstring mips,$(GO_ARCH)),GOMIPS=$(or $(GO_MIPS),softfloat)) \
-		CGO_ENABLED=0 \
-		go build -v -trimpath -ldflags="-s -w" -o $(PKG_BUILD_DIR)/fusiontunx ./cmd/server
+		cargo build --release && \
+		(cp target/release/fusiontunx $(PKG_BUILD_DIR)/fusiontunx 2>/dev/null || cp ../target/release/fusiontunx $(PKG_BUILD_DIR)/fusiontunx 2>/dev/null || true)
 
 	@echo "Downloading Mihomo $(MIHOMO_VERSION)..."
 	wget -q -O $(PKG_BUILD_DIR)/mihomo.gz "https://github.com/MetaCubeX/mihomo/releases/download/$(MIHOMO_VERSION)/mihomo-linux-$(MIHOMO_ARCH)-$(MIHOMO_VERSION).gz"

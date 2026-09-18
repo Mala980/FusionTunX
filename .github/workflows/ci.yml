@@ -1,4 +1,4 @@
-name: CI Build Test
+name: CI Test Build (ARM64 & ARMv7)
 
 on:
   push:
@@ -6,12 +6,76 @@ on:
       - main
       - dev
       - 'arena/**'
+  pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
+  test_build:
+    name: Build Linux ${{ matrix.arch }} (${{ matrix.target }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            target: aarch64-unknown-linux-gnu
+            gcc_pkg: gcc-aarch64-linux-gnu
+          - arch: armv7
+            target: armv7-unknown-linux-gnueabihf
+            gcc_pkg: gcc-arm-linux-gnueabihf
+          - arch: amd64
+            target: x86_64-unknown-linux-gnu
+            gcc_pkg: ""
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Test Step
-        run: echo "CI is working!"
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build Dashboard Frontend
+        run: |
+          cd src/dash
+          npm install
+          npm run build
+          cd ../..
+
+      - name: Setup Rust Toolchain
+        run: |
+          rustup update stable
+          rustup target add ${{ matrix.target }}
+
+      - name: Install Cross Compiler
+        if: matrix.gcc_pkg != ''
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ matrix.gcc_pkg }}
+
+      - name: Build Rust Binary (${{ matrix.target }})
+        run: |
+          cargo build --release --target ${{ matrix.target }}
+
+      - name: Verify Binary
+        run: |
+          BINARY="target/${{ matrix.target }}/release/fusiontunx"
+          if [ ! -f "$BINARY" ]; then
+            BINARY="src/target/${{ matrix.target }}/release/fusiontunx"
+          fi
+          echo "Checking binary: $BINARY"
+          file "$BINARY"
+          ls -lh "$BINARY"
+          mkdir -p output
+          cp "$BINARY" "output/fusiontunx-linux-${{ matrix.arch }}"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fusiontunx-linux-${{ matrix.arch }}
+          path: output/fusiontunx-linux-${{ matrix.arch }}

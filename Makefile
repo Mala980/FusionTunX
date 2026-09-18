@@ -49,15 +49,13 @@ build-arch: arch-x86_64 arch-aarch64 arch-armv7h
 build-all: all
 
 build-core:
-	@echo "Installing Swag (Swagger Generator)..."
-	(which swag >/dev/null 2>&1) || (go install github.com/swaggo/swag/cmd/swag@latest && export PATH=$$HOME/go/bin:$$PATH)
 	@echo "Building binaries from source..."
-	export PATH=$$HOME/go/bin:$$PATH && cd src && bash build.sh
+	cd src && bash build.sh
 	@echo "Copying binaries to core directory..."
 	mkdir -p $(CORE_DIR)
-	cp src/bin/fusiontunx-linux-amd64 $(CORE_DIR)/$(BIN_AMD64)
-	cp src/bin/fusiontunx-linux-arm64 $(CORE_DIR)/$(BIN_ARM64)
-	cp src/bin/fusiontunx-linux-armv7 $(CORE_DIR)/$(BIN_ARMHF)
+	[ -f src/bin/$(BIN_AMD64) ] && cp src/bin/$(BIN_AMD64) $(CORE_DIR)/$(BIN_AMD64) || true
+	[ -f src/bin/$(BIN_ARM64) ] && cp src/bin/$(BIN_ARM64) $(CORE_DIR)/$(BIN_ARM64) || true
+	[ -f src/bin/$(BIN_ARMHF) ] && cp src/bin/$(BIN_ARMHF) $(CORE_DIR)/$(BIN_ARMHF) || true
 	@echo "Core binaries ready in $(CORE_DIR)/"
 
 clean:
