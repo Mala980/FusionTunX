@@ -1,7 +1,7 @@
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Json;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::json;
 use std::net::IpAddr;
 
@@ -11,7 +11,7 @@ pub struct LookupRequest {
 }
 
 pub async fn lookup_domain(Json(req): Json<LookupRequest>) -> impl IntoResponse {
-    let domain = req.domain.trim();
+    let domain = req.domain.trim().to_string();
     if domain.is_empty() {
         return (
             StatusCode::BAD_REQUEST,
@@ -23,7 +23,7 @@ pub async fn lookup_domain(Json(req): Json<LookupRequest>) -> impl IntoResponse 
     }
 
     let host_port = format!("{}:0", domain);
-    match tokio::net::lookup_host(&host_port).await {
+    match tokio::net::lookup_host(host_port).await {
         Ok(addrs) => {
             let mut ipv4 = Vec::new();
             let mut ipv6 = Vec::new();

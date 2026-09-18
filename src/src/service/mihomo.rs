@@ -375,8 +375,8 @@ fn ensure_tun_disabled(config: &str) -> String {
     let mut lines: Vec<String> = config.lines().map(|s| s.to_string()).collect();
     let mut in_tun_section = false;
 
-    for line in &mut lines {
-        let trimmed = line.trim();
+    for i in 0..lines.len() {
+        let trimmed = lines[i].trim().to_string();
 
         if trimmed == "tun:" {
             in_tun_section = true;
@@ -384,11 +384,11 @@ fn ensure_tun_disabled(config: &str) -> String {
         }
 
         if in_tun_section && trimmed.starts_with("enable:") {
-            *line = line.replace("enable: true", "enable: false");
+            lines[i] = lines[i].replace("enable: true", "enable: false");
             in_tun_section = false;
         }
 
-        if in_tun_section && !trimmed.is_empty() && !line.starts_with(' ') && !line.starts_with('\t') {
+        if in_tun_section && !trimmed.is_empty() && !lines[i].starts_with(' ') && !lines[i].starts_with('\t') {
             in_tun_section = false;
         }
     }
