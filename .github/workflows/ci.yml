@@ -1,0 +1,17 @@
+name: CI Build Test
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - 'arena/**'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test Step
+        run: echo "CI is working!"
